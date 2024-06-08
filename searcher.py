@@ -105,9 +105,9 @@ class TVTimeItem:
 
 class TVTimeTVShow(TVTimeItem):
     def __init__(self, row: Any):
-        super().__init__(row["tv_show_name"], row["updated_at"])
+        super().__init__(row["series_name"], row["updated_at"])
         self.episode_id = row["episode_id"]
-        self.season_number = row["episode_season_number"]
+        self.season_number = row["season_number"]
         self.episode_number = row["episode_number"]
 
     def parse_season_number(self, trakt_show: TraktTVShow) -> int:
@@ -142,16 +142,23 @@ class TVTimeMovie(TVTimeItem):
         super().__init__(row["movie_name"], row["updated_at"])
         self.activity_type = row["type"]
 
-        # Release date is available for movies
+        # Release date is available for movie    
+        
+        try:
+            release_date = datetime.strptime(
+                row["release_date"], "%Y-%m-%d %H:%M:%S"
+            )
+        except ValueError as e:
+            #print("Error parsing release date:", e)
+            release_date = None  
 
-        release_date = datetime.strptime(
-            row["release_date"], "%Y-%m-%d %H:%M:%S"
-        )
 
         # Check that date is valid
-        if release_date.year > 1800:
+        if (release_date is not None and release_date.year > 1800):
             self.title = Title(self.title.name, release_date.year)
-
+        else :
+            self.title = Title (self.title.name)
+    
 
 class Searcher(ABC):
     def __init__(self, user_matched_table: Table):

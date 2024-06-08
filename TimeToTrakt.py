@@ -66,7 +66,7 @@ def get_configuration() -> Config:
 
 config = get_configuration()
 
-WATCHED_SHOWS_PATH = config.gdpr_workspace_path + "/seen_episode.csv"
+WATCHED_SHOWS_PATH = config.gdpr_workspace_path + "/tracking-prod-records-v2.csv"
 FOLLOWED_SHOWS_PATH = config.gdpr_workspace_path + "/followed_tv_show.csv"
 MOVIES_PATH = config.gdpr_workspace_path + "/tracking-prod-records.csv"
 
@@ -85,11 +85,13 @@ def init_trakt_auth() -> bool:
 
 def process_watched_shows() -> None:
     with open(WATCHED_SHOWS_PATH, newline="", encoding="UTF-8") as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=",")
+        reader = filter(lambda p: p["series_name"] != "" and p["season_number"] != "", csv.DictReader(csvfile, delimiter=","))
+        csvfile.seek(0, 0)
         total_rows = len(list(reader))
         csvfile.seek(0, 0)
 
-        # Ignore the header row
+        # Ignore the header row and first row
+        next(reader, None)
         next(reader, None)
         for rows_count, row in enumerate(reader):
             tv_time_show = TVTimeTVShow(row)
